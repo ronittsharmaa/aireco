@@ -1,83 +1,305 @@
 import { useState, useEffect, useRef } from "react";
 import "../AirecoSite.css";
+import { services } from "../data/services";
+import { Link } from "react-router-dom";
+
+const styles = `
+.bra-scene {
+  position: absolute;
+  left: 8%;
+  top: 0;
+  bottom: 0;
+  width: 120px;
+  overflow: visible;
+  pointer-events: none;
+  z-index: 1000;
+}
+.bra-battery {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: none;
+  top: -80px;
+}
+.bra-battery.phase-falling {
+  transition: top 1.1s cubic-bezier(0.55, 0.05, 0.95, 0.45),
+              transform 1.1s linear;
+  top: calc(100% - 180px);
+  transform: translateX(-50%) rotate(-25deg);
+}
+.bra-battery.phase-impact {
+  top: calc(100% - 200px);
+  transform: translateX(-50%) rotate(-25deg) scaleY(0.75) scaleX(1.2);
+  transition: transform 0.08s ease-out, top 0.08s ease-out;
+}
+.bra-battery.phase-vanish {
+  opacity: 0;
+  transform: translateX(-50%) rotate(-25deg) scale(0.5);
+  transition: opacity 0.12s ease-out, transform 0.12s ease-out;
+}
+.bra-dust-area {
+  position: absolute;
+  bottom: 200px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+}
+.bra-dust-particle {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0;
+  left: 0;
+  top: 0;
+}
+.bra-dust-particle.burst {
+  animation: bra-dustburst 0.6s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+}
+@keyframes bra-dustburst {
+  0%   { transform: translate(0, 0); opacity: 0.9; }
+  100% { transform: translate(var(--dx), var(--dy)); opacity: 0; }
+}
+.bra-pile {
+  position: absolute;
+  bottom: 200px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 70px;
+  height: 0;
+  border-radius: 50% 50% 6px 6px / 40% 40% 8px 8px;
+  background: #1a1a18;
+  opacity: 0;
+  transition: height 0.5s cubic-bezier(0.3, 1.5, 0.5, 1),
+              opacity 0.3s ease-out,
+              box-shadow 0.5s ease-out;
+  box-shadow: none;
+}
+.bra-pile.show {
+  height: 28px;
+  opacity: 1;
+  box-shadow: 0 0 18px 4px rgba(80, 80, 60, 0.35),
+              0 0 6px 2px rgba(120, 120, 80, 0.2);
+}
+.bra-pile.glow {
+  box-shadow: 0 0 32px 10px rgba(100, 100, 60, 0.55),
+              0 0 12px 4px rgba(160, 150, 80, 0.35);
+  transition: box-shadow 0.4s ease-in-out;
+}
+.bra-pile.fade-out {
+  opacity: 0;
+  height: 0;
+  box-shadow: none;
+  transition: opacity 0.6s ease-out, height 0.6s ease-out, box-shadow 0.4s ease-out;
+}
+.bra-glow-ring {
+  position: absolute;
+  bottom: 200px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 10px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(100, 100, 70, 0.22) 0%, transparent 80%);
+  opacity: 0;
+  transition: opacity 0.6s ease-out 0.3s;
+  pointer-events: none;
+}
+.bra-glow-ring.show { opacity: 1; }
+.bra-glow-ring.glow {
+  background: radial-gradient(ellipse, rgba(140, 130, 60, 0.45) 0%, transparent 80%);
+  width: 110px;
+  transition: opacity 0.4s ease-in-out, width 0.4s ease-in-out, background 0.4s ease-in-out;
+}
+.bra-glow-ring.fade-out {
+  opacity: 0;
+  transition: opacity 0.6s ease-out;
+}
+`;
+
 function BatteryRecycleAnimation() {
-  const [phase, setPhase] = useState("idle"); // idle | falling | impact | powder
+  const [phase, setPhase] = useState("idle");
   const [dustParticles, setDustParticles] = useState([]);
-  const timeoutsRef = useRef([]);
+  const [pileClass, setPileClass] = useState("");
+  const [glowClass, setGlowClass] = useState("");
+  const [done, setDone] = useState(false);
+  const timersRef = useRef([]);
+
+  const clearTimers = () => {
+    timersRef.current.forEach(clearTimeout);
+    timersRef.current = [];
+  };
 
   const makeDust = () => {
-    const particles = Array.from({ length: 14 }, () => {
-      const angle = Math.random() * Math.PI - Math.PI;
-      const dist = 20 + Math.random() * 45;
+    const particles = Array.from({ length: 18 }, () => {
+      const angle = Math.random() * Math.PI * 1.4 - Math.PI * 0.7;
+      const dist = 22 + Math.random() * 52;
+      const dx = Math.cos(angle) * dist * (Math.random() > 0.5 ? 1 : -1);
+      const dy = -(
+        Math.abs(Math.sin(angle)) * dist * 0.5 +
+        8 +
+        Math.random() * 10
+      );
+      const size = 2.5 + Math.random() * 4;
       return {
         id: Math.random(),
-        size: 3 + Math.random() * 4,
-        dx: Math.cos(angle) * dist,
-        dy: -Math.abs(Math.sin(angle) * dist) * 0.6 - 10,
+        size,
+        dx,
+        dy,
+        color: Math.random() > 0.4 ? "#888780" : "#2C2C2A",
       };
     });
     setDustParticles(particles);
   };
 
-  const clearPendingTimeouts = () => {
-    timeoutsRef.current.forEach((id) => clearTimeout(id));
-    timeoutsRef.current = [];
-  };
-
   const runAnimation = () => {
-    clearPendingTimeouts();
+    clearTimers();
     setPhase("idle");
     setDustParticles([]);
+    setPileClass("");
+    setGlowClass("");
+    setDone(false);
 
     requestAnimationFrame(() => {
-      setPhase("falling");
+      requestAnimationFrame(() => {
+        setPhase("falling");
+      });
     });
 
-    const t1 = setTimeout(() => {
-      setPhase("impact");
-    }, 900);
+    // Impact squash
+    const t1 = setTimeout(() => setPhase("impact"), 1050);
 
+    // Battery vanishes, dust bursts
     const t2 = setTimeout(() => {
+      setPhase("vanish");
       makeDust();
-      setPhase("powder");
-    }, 1020);
+    }, 1180);
 
-    timeoutsRef.current.push(t1, t2);
+    // Pile rises + soft glow
+    const t3 = setTimeout(() => {
+      setPileClass("show");
+      setGlowClass("show");
+    }, 1350);
+
+    // Intensify glow after pile settles
+    const t4 = setTimeout(() => {
+      setPileClass("show glow");
+      setGlowClass("show glow");
+    }, 1900);
+
+    // Fade everything out after 2s of glow
+    const t5 = setTimeout(() => {
+      setPileClass("show glow fade-out");
+      setGlowClass("show glow fade-out");
+    }, 3900);
+
+    // Mark done so the wrapper unmounts / hides
+    const t6 = setTimeout(() => {
+      setDone(true);
+    }, 4600);
+
+    timersRef.current.push(t1, t2, t3, t4, t5, t6);
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     runAnimation();
+    return clearTimers;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const [burstKey, setBurstKey] = useState(0);
+  useEffect(() => {
+    if (dustParticles.length > 0) {
+      requestAnimationFrame(() => setBurstKey((k) => k + 1));
+    }
+  }, [dustParticles]);
+
+  if (done) return null;
+
   return (
-    <div className="battery-recycle-scene">
-      <div className={`battery phase-${phase}`}>
-        <svg viewBox="0 0 34 64" width="30" height="56">
-          <rect x="12" y="0" width="10" height="6" rx="2" fill="#888780" />
-          <rect x="2" y="6" width="30" height="56" rx="4" fill="#1D9E75" />
-          <rect x="6" y="14" width="22" height="10" fill="#E1F5EE" />
-          <text x="17" y="46" textAnchor="middle" fontSize="9" fill="#04342C" fontFamily="sans-serif">+/-</text>
-        </svg>
+    <>
+      <style>{styles}</style>
+      <div className="bra-scene">
+        <div
+          className={`bra-battery${phase !== "idle" ? ` phase-${phase}` : ""}`}
+        >
+          <svg viewBox="0 0 40 72" width="40" height="72">
+            <rect x="14" y="0" width="12" height="8" rx="3" fill="#5F5E5A" />
+            <rect x="2" y="8" width="36" height="62" rx="6" fill="#1D9E75" />
+            <rect
+              x="7"
+              y="17"
+              width="26"
+              height="11"
+              rx="2"
+              fill="#9FE1CB"
+              opacity="0.7"
+            />
+            <rect
+              x="10"
+              y="36"
+              width="20"
+              height="4"
+              rx="1.5"
+              fill="#085041"
+              opacity="0.9"
+            />
+            <rect
+              x="10"
+              y="44"
+              width="20"
+              height="4"
+              rx="1.5"
+              fill="#085041"
+              opacity="0.9"
+            />
+            <rect
+              x="10"
+              y="52"
+              width="20"
+              height="4"
+              rx="1.5"
+              fill="#085041"
+              opacity="0.9"
+            />
+            <text
+              x="20"
+              y="31"
+              textAnchor="middle"
+              fontSize="8"
+              fill="#04342C"
+              fontFamily="sans-serif"
+              fontWeight="600"
+            >
+              +
+            </text>
+          </svg>
+        </div>
+
+        <div className="bra-dust-area">
+          {dustParticles.map((p) => (
+            <div
+              key={p.id}
+              className={`bra-dust-particle${burstKey > 0 ? " burst" : ""}`}
+              style={{
+                width: p.size,
+                height: p.size,
+                background: p.color,
+                "--dx": `${p.dx}px`,
+                "--dy": `${p.dy}px`,
+              }}
+            />
+          ))}
+        </div>
+
+        <div className={`bra-pile${pileClass ? ` ${pileClass}` : ""}`} />
+        <div className={`bra-glow-ring${glowClass ? ` ${glowClass}` : ""}`} />
       </div>
-
-      <div className="dust-container" style={{zIndex: 999}}>
-
-        {dustParticles.map((p) => (
-          <div
-            key={p.id}
-            className="dust-particle"
-            style={{
-              width: p.size,
-              height: p.size,
-              "--dx": `${p.dx}px`,
-              "--dy": `${p.dy}px`,
-            }}
-          />
-        ))}
-      </div>
-
-      <div className={`powder-pile ${phase === "powder" ? "show" : ""}`}></div>
-    </div>
+    </>
   );
 }
 
@@ -123,6 +345,7 @@ function ContactForm() {
         setStatus("error");
       }
     } catch (err) {
+      console.error(err);
       setStatus("error");
     }
   };
@@ -199,7 +422,8 @@ function ContactForm() {
 
       {status === "error" && (
         <p className="form-status form-status-error">
-          Something went wrong sending your message. Please try again or email us directly.
+          Something went wrong sending your message. Please try again or email
+          us directly.
         </p>
       )}
     </form>
@@ -235,9 +459,14 @@ export default function AirecoSite() {
     <>
       {/* NAVBAR */}
       <nav className="navbar">
-        <div className="max-w navbar-inner">
+        <div className="navbar-inner">
           <div className="brand">
-            <img className="logo-img" href="./AirecoSite" src="logo.png" alt="Aireco logo" />
+            <img
+              className="logo-img"
+              href="./AirecoSite"
+              src="logo.png"
+              alt="Aireco logo"
+            />
             <h1 className="logo">AIRECO</h1>
           </div>
 
@@ -269,7 +498,9 @@ export default function AirecoSite() {
           </p>
 
           <div className="hero-actions">
-            <a href="#contact" className="btn btn-secondary">Learn More</a>
+            <a href="#contact" className="btn btn-secondary">
+              Learn More
+            </a>
           </div>
         </div>
       </section>
@@ -283,7 +514,16 @@ export default function AirecoSite() {
 
           <div className="about-grid">
             <p>
-Aireco Recyclers Private Limited provides secure, compliant, and sustainable e-waste recycling for organizations and businesses, ensuring ethical disposal, maximum material recovery, and the return of valuable resources to the supply chain instead of landfills.With a process-driven approach and modern recycling infrastructure, Aireco ensures secure e-waste segregation, dismantling, processing, reverse logistics, documentation, and responsible recycling while promoting transparency, safety, sustainability, and a circular economy.            </p>
+              Aireco Recyclers Private Limited provides secure, compliant, and
+              sustainable e-waste recycling for organizations and businesses,
+              ensuring ethical disposal, maximum material recovery, and the
+              return of valuable resources to the supply chain instead of
+              landfills.With a process-driven approach and modern recycling
+              infrastructure, Aireco ensures secure e-waste segregation,
+              dismantling, processing, reverse logistics, documentation, and
+              responsible recycling while promoting transparency, safety,
+              sustainability, and a circular economy.{" "}
+            </p>
           </div>
         </div>
       </section>
@@ -318,12 +558,17 @@ Aireco Recyclers Private Limited provides secure, compliant, and sustainable e-w
           <h2 className="section-title mb-20">Services</h2>
 
           <div className="projects-grid">
-            <div className="project-box"></div>
-            <div className="project-box"></div>
-            <div className="project-box"></div>
-            <div className="project-box"></div>
-            <div className="project-box"></div>
-            <div className="project-box"></div>
+            {services.map((service) => (
+              <Link
+                key={service.id}
+                to={`/services/${service.slug}`}
+                className="project-box"
+              >
+                <div key={services.id} className="project-box">
+                  {services.title}
+                </div>
+              </Link>
+            ))}
           </div>
         </div>
       </section>
@@ -360,12 +605,9 @@ Aireco Recyclers Private Limited provides secure, compliant, and sustainable e-w
         <div className="max-w fade-up" ref={addFadeRef}>
           <h2 className="section-title mb-10">Let's Work Together</h2>
 
-          <p className="contact-text">
-            Phone : +91-9650521774
-          </p>
+          <p className="contact-text">Phone : +91-9650521774</p>
 
-          <p className="contact-text">E-mail : info@airecorecycler.com
-          </p>
+          <p className="contact-text">E-mail : info@airecorecycler.com</p>
 
           <ContactForm />
         </div>
@@ -374,7 +616,7 @@ Aireco Recyclers Private Limited provides secure, compliant, and sustainable e-w
       {/* FOOTER */}
       <footer className="footer">
         <div className="max-w footer-inner">
-          <p>© 2026 Aireco Recyclers</p>
+          <p>© {new Date().getFullYear()} Aireco Recyclers</p>
           <p>Sustainable • Responsible • Circular</p>
         </div>
       </footer>
