@@ -1,46 +1,71 @@
-// src/data/services.js
-import test_image from "../assets/hero.png";
 export const services = [
   {
     id: 1,
-    title: "Awareness Programs",
-    slug: "awareness-programs",
-    description: "",
-    image: test_image,
+    slug: "reverse-logistics",
+    title: "Reverse Logistics",
+    eyebrow: "Operations Support",
+    image: "/images/reverse-logistics.jpg",
+    description:
+      "Efficient and compliant reverse logistics designed to streamline e-waste movement from multiple locations. We support structured pickups, consolidation, and coordination to enable timely and responsible processing.",
+    whatWeDo: [
+      "Pickup scheduling and route planning",
+      "Multi-location collection coordination",
+      "Consolidation and movement tracking support",
+      "Documentation alignment for handover",
+    ],
+    idealFor: [
+      "Organizations with distributed offices",
+      "Retail/service networks",
+      "OEMs & channel partners",
+      "Large-scale take-back drives",
+    ],
+    tags: "Timely pickups • Structured coordination",
   },
+  // ...repeat this shape for your other 5 services
+{
+    id: 2,
+    slug: "reverse-logistics",
+    title: "Reverse Logistics",
+    eyebrow: "Operations Support",
+    image: "/images/reverse-logistics.jpg",
+    description:
+      "Efficient and compliant reverse logistics designed to streamline e-waste movement from multiple locations. We support structured pickups, consolidation, and coordination to enable timely and responsible processing.",
+    whatWeDo: [
+      "Pickup scheduling and route planning",
+      "Multi-location collection coordination",
+      "Consolidation and movement tracking support",
+      "Documentation alignment for handover",
+    ],
+    idealFor: [
+      "Organizations with distributed offices",
+      "Retail/service networks",
+      "OEMs & channel partners",
+      "Large-scale take-back drives",
+    ],
+    tags: "Timely pickups • Structured coordination",
+  },
+
   {
     id: 2,
-    title: "EPR Support",
-    slug: "epr-support",
-    description: "",
-    image: test_image,
-  },
-  {
-    id: 3,
-    title: "Hazardous Waste Management",
-    slug: "hazardous-waste-management",
-    description: "",
-    image: test_image,
-  },
-  {
-    id: 4,
-    title: "Data Destruction",
-    slug: "data-destruction",
-    description: "",
-    image: test_image,
-  },
-  {
-    id: 5,
-    title: "Reverse Logistics",
     slug: "reverse-logistics",
-    description: "",
-    image: test_image,
+    title: "Reverse Logistics",
+    eyebrow: "Operations Support",
+    image: "/images/reverse-logistics.jpg",
+    description:
+      "Efficient and compliant reverse logistics designed to streamline e-waste movement from multiple locations. We support structured pickups, consolidation, and coordination to enable timely and responsible processing.",
+    whatWeDo: [
+      "Pickup scheduling and route planning",
+      "Multi-location collection coordination",
+      "Consolidation and movement tracking support",
+      "Documentation alignment for handover",
+    ],
+    idealFor: [
+      "Organizations with distributed offices",
+      "Retail/service networks",
+      "OEMs & channel partners",
+      "Large-scale take-back drives",
+    ],
+    tags: "Timely pickups • Structured coordination",
   },
-  {
-    id: 6,
-    title: "Collection & Recycling",
-    slug: "collection-and-recycling",
-    description: "",
-    image: test_image,
-  },
+  // ...repeat this shape for your other 5 services
 ];

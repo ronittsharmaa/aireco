@@ -1,0 +1,107 @@
+/* ---------- Scroll-driven background battery ---------- */
+
+.scroll-battery-layer {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 0; /* sits behind normal content; sections get z-index: 1 below */
+  overflow: hidden;
+}
+
+.scroll-battery-wrap {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 0.16;
+  will-change: transform, opacity;
+}
+
+.scroll-battery-svg {
+  display: block;
+  width: 132px;
+  height: auto; /* viewBox aspect ratio (200:380) keeps proportions */
+}
+
+/* ===== Hairline crack overlay ===== */
+/* A single fine fracture line draws in over the existing battery — no
+   squash/punch transform on the body itself. The body stays put; only the
+   crack appears, which reads as a real material failure rather than a
+   cartoon impact frame. */
+
+.scroll-battery-cracklines {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  animation: sb-crack-draw 220ms ease-out forwards;
+}
+
+.scroll-battery-cracklines.is-faded {
+  animation: none;
+  opacity: 0.55;
+}
+
+@keyframes sb-crack-draw {
+  0% {
+    opacity: 0;
+  }
+  55% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 0.55;
+  }
+}
+
+.scroll-battery-crack {
+  position: absolute;
+}
+
+/* ===== Dissolve ===== */
+/* The whole battery (body + crack) breaks apart via an SVG displacement
+   filter (feTurbulence -> feDisplacementMap, animated in the filter defs
+   themselves) while fading out — a clean disintegrate rather than flying
+   debris. The filter handles the "breaking into grain" motion; this
+   keyframe only handles the opacity ramp and a very slight settle in scale
+   so it doesn't look like a static crossfade. */
+
+.scroll-battery-dissolve {
+  position: absolute;
+  filter: url(#sb-dissolve-filter);
+  /* Opacity is animated via an inline transition set in JS, starting from
+     the actual frozen value at trigger time — not a CSS keyframe, which
+     would otherwise force its own 0% value and override whatever opacity
+     the battery actually had when the burst started. */
+}
+
+/* Ensure page sections render above the fixed battery layer */
+.hero,
+.section,
+.stats,
+.footer {
+  position: relative;
+  z-index: 1;
+}
+
+@media (max-width: 768px) {
+  .scroll-battery-svg {
+    width: 140px;
+    height: 266px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-battery-cracklines {
+    animation: none !important;
+    opacity: 0.45;
+  }
+  .scroll-battery-dissolve {
+    transition: none !important;
+    opacity: 0 !important;
+  }
+}

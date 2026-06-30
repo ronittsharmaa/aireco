@@ -1,11 +1,9 @@
-// src/pages/ServiceDetails.jsx
-
-import { useParams, Navigate } from "react-router-dom";
+import { useParams, Navigate, Link } from "react-router-dom";
+import "./ServiceDetails.css";
 import { services } from "../data/services";
 
-function ServiceDetails({ title }) {
+export default function ServiceDetails() {
   const { slug } = useParams();
-
   const service = services.find((item) => item.slug === slug);
 
   if (!service) {
@@ -13,18 +11,47 @@ function ServiceDetails({ title }) {
   }
 
   return (
-    <div>
-      <h1>{title}</h1>
-      <h1>{service.title}</h1>
-      <p>{service.description || "Coming soon..."}</p>
-      <img
-        src={service.image}
-        alt={service.title}
-        height="100"
-        width="100"
-      />{" "}
-    </div>
+    <section className="service-details">
+      <div className="service-card">
+        <div className="service-image">
+          <img src={service.image} alt={service.title} />
+        </div>
+
+        <div className="service-content">
+          <p className="service-eyebrow">{service.eyebrow}</p>
+          <h1 className="service-title">{service.title}</h1>
+          <p className="service-description">{service.description}</p>
+
+          <div className="service-info-grid">
+            <div className="service-info-box">
+              <h3>What we do</h3>
+              <ul>
+                {service.whatWeDo?.map((point, i) => (
+                  <li key={i}>{point}</li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="service-info-box">
+              <h3>Ideal for</h3>
+              <ul>
+                {service.idealFor?.map((point, i) => (
+                  <li key={i}>{point}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          <div className="service-footer">
+            {service.tags && (
+              <span className="service-tags">{service.tags}</span>
+            )}
+            <Link to="/#contact" className="btn btn-secondary service-enquire">
+              Enquire →
+            </Link>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
-
-export default ServiceDetails;

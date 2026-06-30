@@ -1,0 +1,58 @@
+/* ---------- RevealText: modern staggered scroll-in text ---------- */
+
+.reveal-text {
+  display: block;
+}
+
+/* Each line sits inside a mask that clips overflow, so the line genuinely
+   appears to rise up from being hidden below the baseline rather than just
+   fading in place. */
+.reveal-text-line-mask {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.08em; /* prevents descenders (g, y, p) from being clipped */
+}
+
+.reveal-text-line {
+  display: inline-block;
+  width: 100%;
+  transform: translateY(115%);
+  opacity: 0;
+  filter: blur(6px);
+  transition:
+    transform 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.4s ease-out,
+    filter 0.4s ease-out;
+  will-change: transform, opacity, filter;
+}
+
+.reveal-text-line.is-visible {
+  transform: translateY(0);
+  opacity: 1;
+  filter: blur(0px);
+}
+
+/* Word-split variant reads more like a sentence assembling itself; slightly
+   shorter travel distance and quicker settle per word. */
+.reveal-text[data-split="words"] .reveal-text-line-mask {
+  display: inline-block;
+}
+
+.reveal-text[data-split="words"] .reveal-text-line {
+  width: auto;
+  transform: translateY(70%);
+  transition:
+    transform 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.5s ease-out,
+    filter 0.5s ease-out;
+}
+
+/* Respect reduced-motion preference: skip the animation, just show content */
+@media (prefers-reduced-motion: reduce) {
+  .reveal-text-line {
+    transition: none;
+    transform: none;
+    filter: none;
+    opacity: 1;
+  }
+}
